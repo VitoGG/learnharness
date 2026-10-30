@@ -8,7 +8,7 @@ import { parseHTML } from "linkedom";
 import { createRequire } from "node:module";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import { ChatGPTBackgroundAccess, ChatGPTConnection, ChatGPTUIProvider, CHATGPT_NOTICE, CHATGPT_DISCONNECT_COPY } from "../components/settings/chatgpt-connection.tsx";
-import { SettingsDialogBody } from "../components/settings/settings-dialog.tsx";
+import { SettingsView } from "../components/settings/settings-view.tsx";
 import { KeysSection } from "../components/settings/keys-section.tsx";
 import { ModelControl } from "../components/model-picker.tsx";
 import type { ChatGPTStatus, ChatGPTControlBridge } from "../src/core/index.ts";
@@ -70,7 +70,7 @@ async function confirmDisconnect() { await click(byTest("chatgpt-disconnect")); 
 afterEach(async () => { await act(async () => root?.unmount()); host?.remove(); root = undefined; host = undefined; delete window.lh; globalThis.fetch = originalFetch; });
 
 test("Providers is the first/default page; General is last and other pages keep relative order", () => {
- const html = renderToStaticMarkup(<SettingsDialogBody onClose={() => {}} />);
+ const html = renderToStaticMarkup(<SettingsView onSelect={() => {}} onClose={() => {}} />);
  const ids = [...html.matchAll(/data-testid="settings-nav-([^"]+)"/g)].map((m) => m[1]);
  assert.deepEqual(ids, ["keys", "agent", "appearance", "graph", "keyboard", "general"]);
  assert.match(html, /settings-nav-keys[^>]*aria-current="true"/); assert.match(html, />Providers<\/button>/);

@@ -17,7 +17,7 @@ import { AppearanceSection, GraphSection } from "../components/settings/appearan
 import { KeysSection } from "../components/settings/keys-section.tsx";
 import { KeyboardSection } from "../components/settings/keyboard-section.tsx";
 import type { GraphSettings } from "../src/core/index.ts";
-import { SettingsDialogBody, SettingsDialogProvider } from "../components/settings/settings-dialog.tsx";
+import { SettingsView, SettingsProvider, settingsHref } from "../components/settings/settings-view.tsx";
 import { KEYBOARD_ACTIONS } from "../src/core/index.ts";
 import { DictationLanguageSetting } from "../components/dictation-language.tsx";
 import { SettingsMenuTrigger } from "../components/settings/controls.tsx";
@@ -32,22 +32,26 @@ function tagOf(html: string, testid: string): string {
 	return html.slice(html.lastIndexOf("<", i), html.indexOf(">", i) + 1);
 }
 
-describe("SettingsDialog (the designed surface, SSR)", () => {
-	it("provider CLOSED: children only — no dialog, no portal content", () => {
+describe("Settings page (the route surface, SSR)", () => {
+	it("the provider renders its children only — settings is a route, not an overlay", () => {
 		const html = renderToStaticMarkup(
-			<SettingsDialogProvider>
+			<SettingsProvider>
 				<p>the app</p>
-			</SettingsDialogProvider>,
+			</SettingsProvider>,
 		);
 		assert.ok(html.includes("the app"));
-		assert.ok(!html.includes("settings-backdrop"));
-		assert.ok(!html.includes("settings-dialog"));
+		assert.ok(!html.includes("settings-page"));
 	});
 
-	it("the dialog frame: role=dialog + the ✕ + the six-section nav, Providers first and General last", () => {
-		const html = renderToStaticMarkup(<SettingsDialogBody onClose={() => {}} />);
-		assert.ok(html.includes('role="dialog"'));
-		assert.ok(html.includes('aria-modal="true"'));
+	it("routes: /settings, /settings/<section>, and the keys row deep link", () => {
+		assert.equal(settingsHref(), "/settings");
+		assert.equal(settingsHref("agent"), "/settings/agent");
+		assert.equal(settingsHref("keys", "DEEPGRAM_API_KEY"), "/settings/keys?row=DEEPGRAM_API_KEY");
+	});
+
+	it("the page frame: the ✕ + the six-section nav, Providers first and General last", () => {
+		const html = renderToStaticMarkup(<SettingsView onSelect={() => {}} onClose={() => {}} />);
+		assert.ok(html.includes('data-testid="settings-page"'));
 		assert.ok(html.includes('aria-label="Close settings"'));
 		for (const id of ["general", "keys", "agent", "appearance", "graph", "keyboard"]) {
 			assert.ok(html.includes(`data-testid="settings-nav-${id}"`), id);
@@ -58,8 +62,6 @@ describe("SettingsDialog (the designed surface, SSR)", () => {
 		assert.ok(tagOf(html, "settings-nav-keyboard").includes('aria-current="false"'));
 		// Fetches don't run under SSR — the loading state IS the SSR state.
 		assert.ok(html.includes("Loading settings…"));
-		// Modal-only doctrine: no link back to /settings anywhere in it.
-		assert.ok(!html.includes('href="/settings"'));
 	});
 });
 

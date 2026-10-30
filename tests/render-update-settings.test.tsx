@@ -11,7 +11,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { parseHTML } from "linkedom";
 import { UpdateSettings, updateStatusText, MANUAL_UPDATE_HINT, AUTO_UPDATE_HINT, type UpdateState } from "../components/settings/update-settings.tsx";
 import UpdateBanner from "../components/update-banner.tsx";
-import { SettingsDialogBody, SettingsDialogProvider } from "../components/settings/settings-dialog.tsx";
+import { SettingsView, SettingsProvider } from "../components/settings/settings-view.tsx";
 import nextConfig from "../next.config.ts";
 
 const dom = parseHTML("<html><body></body></html>");
@@ -204,20 +204,19 @@ describe("Settings integration", () => {
 			}
 			return Response.json({ settings: record });
 		};
-		const host = await mount(<SettingsDialogBody initialSection="general" onClose={() => {}} />);
+		const host = await mount(<SettingsView section="general" onSelect={() => {}} onClose={() => {}} />);
 		await click(q(host, "toggle-auto-update"));
 		assert.deepEqual(puts, [{ autoUpdate: false, futureSibling: "keep" }]);
 		assert.equal(q(host, "toggle-auto-update")!.getAttribute("aria-checked"), "false");
 	});
 
-	it("the shell's navigation request opens General, but opening alone never checks", async () => {
+	it("the shell's navigation request routes to General, but opening alone never checks", async () => {
 		const b = bridge();
-		globalThis.fetch = async () => Response.json({ settings: { version: 1 } });
-		const host = await mount(<SettingsDialogProvider><span>app</span></SettingsDialogProvider>);
-		assert.equal(q(document, "settings-dialog"), null);
+		const visited: string[] = [];
+		const host = await mount(<SettingsProvider navigate={(href) => visited.push(href)}><span>app</span></SettingsProvider>);
 		await b.open();
-		assert.equal(q(document, "settings-nav-general")!.getAttribute("aria-current"), "true");
-		assert.ok(q(document, "row-version")); assert.equal(b.calls.check, 0);
+		assert.deepEqual(visited, ["/settings/general"]);
+		assert.equal(b.calls.check, 0);
 		assert.ok(host.textContent!.includes("app"));
 	});
 });

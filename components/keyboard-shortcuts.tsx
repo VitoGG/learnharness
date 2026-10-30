@@ -36,7 +36,7 @@ import {
 	KEYBOARD_ACTIONS,
 } from "@/src/core";
 import { isDictationActive } from "@/components/dictation";
-import { useSettingsDialog } from "@/components/settings/settings-dialog.tsx";
+import { useSettings } from "@/components/settings/settings-view.tsx";
 
 // Re-exported for the contract pin (tests/keyboard-toggle-sidebar.test.ts):
 // the dispatcher composes event names through the ONE helper — a second
@@ -46,7 +46,7 @@ export { kbdEventForAction };
 export function KeyboardShortcuts() {
 	const router = useRouter();
 	const [cheatOpen, setCheatOpen] = useState(false);
-	const { open: openSettings } = useSettingsDialog();
+	const { open: openSettings } = useSettings();
 
 	// Router + cheat + settings state inside a ref so the keydown listener
 	// (attached once) never goes stale.
@@ -120,8 +120,8 @@ export function KeyboardShortcuts() {
 					handlersRef.current.router.push("/chat/new");
 					break;
 				case "open-settings":
-					// Settings-app wave: the dialog is the surface, the URL is
-					// gone — /settings redirects to the draft shell.
+					// Mobile wave: settings is a route again (/settings/<section>);
+					// open() remembers this page for the close.
 					handlersRef.current.openSettings();
 					break;
 				case "jump-graph":
